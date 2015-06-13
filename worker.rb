@@ -103,7 +103,7 @@ end
 
 responses = responses.compact
 ## merge the response segments into a coherent transcript
-transcript = ''
+transcript = '' # set header information
 require 'json'
 responses.each_with_index do |response, index|
   segment = JSON.parse(response)
@@ -112,5 +112,4 @@ end
 
 
 #write the file in github.
-
-p transcript
+File.open('transcript/serial-ep01.md', 'w') { |file| file.write(transcript) }
