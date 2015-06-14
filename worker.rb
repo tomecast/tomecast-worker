@@ -174,6 +174,7 @@ class SpoutWorker
           'content' => segment['results'][0]['name']
       }
     end
+    return segments
   end
 
   def store_transcript_in_github(podcast_title,transcript)
