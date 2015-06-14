@@ -166,13 +166,21 @@ class SpoutWorker
       next unless response
       segment = JSON.parse(response)
       next unless segment
-      next if segment['header']['status'] == 'error'
-      segments[index*10] = {
-          'requestid' => segment['header']['properties']['requestid'],
-          'confidence' => segment['results'][0]['confidence'],
-          'timestamp' => index*10,
-          'content' => segment['results'][0]['name']
-      }
+      if segment['header']['status'] == 'error'
+        segments[index*10] = {
+            'requestid' => segment['header']['properties']['requestid'],
+            'timestamp' => index*10,
+            'content' => ''
+        }
+      else
+        segments[index*10] = {
+            'requestid' => segment['header']['properties']['requestid'],
+            'confidence' => segment['results'][0]['confidence'],
+            'timestamp' => index*10,
+            'content' => segment['results'][0]['name']
+        }
+      end
+
     end
     return segments
   end
