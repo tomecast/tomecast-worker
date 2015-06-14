@@ -87,7 +87,7 @@ class SpoutWorker
   end
 
   def download_podcast(episode_url, episode_filename)
-    File.open("podcasts/#{episode_filename}", "wb") do |saved_file|
+    File.open("podcast/#{episode_filename}", "wb") do |saved_file|
       # the following "open" is provided by open-uri
       open(episode_url, "rb") do |read_file|
         saved_file.write(read_file.read)
