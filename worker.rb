@@ -1,5 +1,16 @@
 require 'open-uri'
 require 'open3'
+require 'fileutils'
+
+#retrieve podcast metadata from queue.
+podcast_filename = 'ColbertPodcast.mp3'
+title = 'ColbertPodcast'
+
+#clear up temp folders
+FileUtils.rm_rf Dir.glob("transcript/*")
+FileUtils.rm_rf Dir.glob("segments/*")
+FileUtils.rm_rf Dir.glob("podcast/*")
+
 
 ### Compile SpeechSDK Transcriber
 command = "mcs /reference:System.ServiceModel.dll /reference:System.Runtime.Serialization /reference:System.Web -r:SpeechSDK/x64/SpeechClient.dll Program.cs"
@@ -24,9 +35,6 @@ Open3.popen3(command,:chdir=>'transcribe') do |stdin, out, err, external|
   end
 
 end
-
-
-podcast_filename = 'serial-s01-e01.mp3'
 
 #### Download the podcast
 
@@ -69,7 +77,7 @@ end
 # "3db0f094a68741b6b7c26d46313d1cd6"
 
 responses = []
-Dir['segments/*'][0..1].each do |file_name|
+Dir['segments/*'].sort().each do |file_name|
   next if File.directory? file_name
 
   p file_name
@@ -103,13 +111,30 @@ end
 
 responses = responses.compact
 ## merge the response segments into a coherent transcript
-transcript = '' # set header information
+segments = {}
 require 'json'
 responses.each_with_index do |response, index|
+  next unless response
   segment = JSON.parse(response)
-  transcript+="<div data-requestid=\"#{segment['header']['properties']['requestid']}\" data-confidence=\"#{segment['results'][0]['confidence']}\" data-timestamp=\"#{index*10}\">#{segment['results'][0]['name']}</div>"
+  next unless segment
+  next if segment['header']['status'] == 'error'
+  segments[index*10] = {
+      'requestid' => segment['header']['properties']['requestid'],
+      'confidence' => segment['results'][0]['confidence'],
+      'timestamp' => index*10,
+      'content' => segment['results'][0]['name']
+  }
 end
 
+#add header information
+transcript = {
+    'episode_name' => title,
+    'episode_no' => 1,
+    'date' => 'rfc3339',
+    'episode_url' => 'http://www.google.com',
+    'podcast_url' => 'http://www.google.com',
+    'segments' => segments,
+}
 
 #write the file in github.
-File.open('transcript/serial-ep01.md', 'w') { |file| file.write(transcript) }
+File.open('transcript/colbert.json', 'w') { |file| file.write(JSON.pretty_generate(transcript)) }
