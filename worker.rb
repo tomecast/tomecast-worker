@@ -39,7 +39,7 @@ class SpoutWorker
     download_podcast(episode_url, episode_filename)
 
     #process podcast
-    responses = process_podcast
+    responses = process_podcast(episode_filename)
 
     #generate segments
     segments = generate_segments(responses)
@@ -95,9 +95,9 @@ class SpoutWorker
     end
   end
 
-  def process_podcast()
+  def process_podcast(episode_filename)
     # spliting the podcast into 10s clips with single channel audio and 16000 sample rate
-    command = "sox podcast/#{podcast_filename} -c 1 -r 16000 segments/segment.wav trim 0 10 : newfile : restart "
+    command = "sox podcast/#{episode_filename} -c 1 -r 16000 segments/segment.wav trim 0 10 : newfile : restart "
 
     Open3.popen3(command) do |stdin, out, err, external|
       # Create a thread to read from each stream
