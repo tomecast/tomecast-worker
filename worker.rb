@@ -20,7 +20,7 @@ end
 class SpoutWorker
   include Sidekiq::Worker
 
-  def perform(podcast_title, episode_title, episode_url, pubdate)
+  def perform(podcast_title, episode_title, episode_url, pubdate, description='')
     unless ENV['SPEECH_API_KEY']
       raise 'Speech API Key is missing'
     end
@@ -46,7 +46,7 @@ class SpoutWorker
     transcript = {
         'episode_title' => episode_title,
         'pubdate' => pubdate,
-        'description' => '',
+        'description' => description,
         'episode_url' => episode_url,
         'segments' => segments,
     }
