@@ -189,7 +189,7 @@ class SpoutWorker
     #write the file in github to a new branch.
     client = Octokit::Client.new(:access_token => ENV['GITHUB_API_KEY'])
     #get the master branch sha.
-    master_resource = client.ref('audiospout/spout-podcasts', 'heads/master')
+    master_resource = client.ref('tomecast/spout-podcasts', 'heads/master')
 
     #create a new branchname, ensure its safe.
     branchname = podcast_title + ' - ' + transcript['episode_title']
@@ -197,15 +197,15 @@ class SpoutWorker
     branchname.gsub(/^.*(\\|\/)/, '')
     branchname.gsub!(/[^0-9A-Za-z.\-]/, '_')
 
-    client.create_ref('audiospout/spout-podcasts', 'heads/'+branchname, master_resource[:object][:sha])
+    client.create_ref('tomecast/spout-podcasts', 'heads/'+branchname, master_resource[:object][:sha])
 
-    client.create_contents('audiospout/spout-podcasts',
+    client.create_contents('tomecast/spout-podcasts',
                             "#{podcast_title}/#{transcript['episode_title']}.json",
                             'Added new episode',
                             JSON.pretty_generate(transcript),
                            :branch => branchname)
 
-    client.create_pull_request('audiospout/spout-podcasts', 'master', branchname,
+    client.create_pull_request('tomecast/spout-podcasts', 'master', branchname,
                                "Added new #{podcast_title} episode")
 
   end
