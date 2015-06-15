@@ -6,8 +6,8 @@ Once a message is recieved it will process it, and try to generate a transcript 
 The worker requires the following software to be installed
 
 - ruby 2.x
-- sox - `sudo apt-get install sox`
 - sox mp3 support - `sudo apt-get install libsox-fmt-mp3`
+- sox - `sudo apt-get install sox`
 - mono - http://www.mono-project.com/docs/getting-started/install/linux/
 
 
