@@ -12,9 +12,12 @@ The worker requires the following software to be installed
 
 
 # Getting Started
+
+`bundle install --path vendor/bundle`
+
 The worker can be started by running the following command:
 
-`REDIS_SERVER_URL='redis://ABC123' SPEECH_API_KEY=ABC123 GITHUB_API_KEY=ABC123 bundle exec sidekiq -r ./worker.rb`
+`REDIS_SERVER_URL="redis://ABC123" SPEECH_API_KEY=ABC123 GITHUB_API_KEY=ABC123 bundle exec sidekiq -r ./worker.rb -d -L logs/sidekiq.log`
 
 Where `ABC123` is replaced by your redis url and api keys.
 
