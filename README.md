@@ -33,3 +33,8 @@ Which will add podcasts to the queue.
 - http://stefaanlippens.net/audio_conversion_cheat_sheet
 - `sox test/serial-s01-e01.mp3 -c 1 -r 8000 out.wav trim 0 10`
 - `mcs /reference:System.ServiceModel.dll /reference:System.Runtime.Serialization /reference:System.Web -r:SDK/Microsoft-IntelligentServices-Speech-Windows-1.0.3954923/SpeechSDK/x64/SpeechClient.dll Program.cs`
+
+#TODO:
+- generate a standard timing format (or compatible json version)
+    - TTML - http://www.w3.org/TR/ttaf1-dfxp/
+    - WebVTT - https://en.wikipedia.org/wiki/WebVTT
