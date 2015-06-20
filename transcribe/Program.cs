@@ -155,7 +155,7 @@ namespace SpeechSample
 
             // Note: Sign up at http://www.projectoxford.ai to get a subscription key.  Search for Speech APIs from Azure Marketplace.
 	    // Use the subscription key as Client secret below.
-            Authentication auth = new Authentication("PodcastSpout", args[2].Trim());
+            Authentication auth = new Authentication("TomeCast", args[2].Trim());
 
             string requestUri = args[0].Trim(new char[] { '/', '?' });
 

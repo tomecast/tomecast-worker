@@ -1,5 +1,5 @@
-# Spout-Worker
-The spout worker is an automatic transcriber for podcasts
+# TomeCast-Worker
+The tomecast worker is an automatic transcriber for podcasts
 It will listen to a redis queue for messages
 Once a message is recieved it will process it, and try to generate a transcript of the podcast.
 
