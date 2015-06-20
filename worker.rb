@@ -44,11 +44,11 @@ class SpoutWorker
     #generate segments
     segments = generate_segments(responses)
     transcript = {
-        'episode_title' => episode_title,
-        'pubdate' => pubdate,
+        'title' => episode_title,
+        'date' => DateTime.rfc3339(pubdate).strftime('%F'),
         'description' => description,
         'episode_url' => episode_url,
-        'segments' => segments,
+        'segments' => segments
     }
     store_transcript_in_github(podcast_title,transcript)
 
@@ -192,15 +192,14 @@ class SpoutWorker
     master_resource = client.ref('tomecast/spout-podcasts', 'heads/master')
 
     #create a new branchname, ensure its safe.
-    branchname = podcast_title + ' - ' + transcript['episode_title']
+    branchname = podcast_title + ' - ' + transcript['title']
     # Strip out the non-ascii characters and path delimiteres
-    branchname.gsub(/^.*(\\|\/)/, '')
-    branchname.gsub!(/[^0-9A-Za-z.\-]/, '_')
+    branchname = cleaned_string(branchname)
 
     client.create_ref('tomecast/spout-podcasts', 'heads/'+branchname, master_resource[:object][:sha])
 
     client.create_contents('tomecast/spout-podcasts',
-                            "#{podcast_title}/#{transcript['episode_title']}.json",
+                            "#{podcast_title}/#{(DateTime.rfc3339(transcript['date']).strftime('%F')+'-'+cleaned_string(transcript['title'], '-')).downcase}.json",
                             'Added new episode',
                             JSON.pretty_generate(transcript),
                            :branch => branchname)
@@ -208,5 +207,11 @@ class SpoutWorker
     client.create_pull_request('tomecast/spout-podcasts', 'master', branchname,
                                "Added new #{podcast_title} episode")
 
+  end
+
+  #################################################################################################
+  # Utilities
+  def cleaned_string(raw, delim='_')
+    raw.gsub(/^.*(\\|\/)/, '').gsub(/[^0-9A-Za-z.\-]/, delim)
   end
 end
