@@ -48,7 +48,8 @@ class SpoutWorker
         'date' => DateTime.rfc3339(pubdate).strftime('%F'),
         'description' => description,
         'episode_url' => episode_url,
-        'segments' => segments
+        'segments' => segments,
+        'slug' => cleaned_string(episode_title,'-')
     }
     store_transcript_in_github(podcast_title,transcript)
 
