@@ -6,7 +6,7 @@ from mono:3.10
 workdir /tmp
 run \
     apt-get -y update && \
-    apt-get -y install build-essential zlib1g-dev libssl-dev libreadline6-dev libyaml-dev && \
+    apt-get -y install wget build-essential zlib1g-dev libssl-dev libreadline6-dev libyaml-dev && \
     wget http://ftp.ruby-lang.org/pub/ruby/2.1/ruby-2.1.5.tar.gz
 
 run \
