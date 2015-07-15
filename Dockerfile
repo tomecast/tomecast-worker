@@ -18,7 +18,7 @@ run \
 
 # install sox and mp3 format support
 run \
-    apt-get install libsox-fmt-all sox
+    apt-get -y install libsox-fmt-mp3 sox
 
 # copy the application files to the image
 workdir /srv/tomecast-worker
