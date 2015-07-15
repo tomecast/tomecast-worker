@@ -16,6 +16,9 @@ run \
     make && \
     make install
 
+run \
+    gem install bundler
+
 # install sox and mp3 format support
 run \
     apt-get -y install libsox-fmt-mp3 sox
