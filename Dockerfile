@@ -20,10 +20,13 @@ run \
 run \
     apt-get install libsox-fmt-all sox
 
-# copy the application files to the
+# copy the application files to the image
+workdir /srv/tomecast-worker
 run mkdir /srv/tomecast-worker
 copy . /srv/tomecast-worker/
+run bundle install --path vendor/bundle
+
+
 
 #finish up
-workdir /srv/tomecast-worker
 CMD ["bash"]
