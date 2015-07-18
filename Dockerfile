@@ -31,4 +31,4 @@ run bundle install --path vendor/bundle
 
 
 #finish up
-CMD ["bash"]
+CMD ["bundle exec sidekiq -r ./worker.rb"]
