@@ -69,7 +69,7 @@ class SpoutWorker
     Open3.popen3(command,:chdir=>'transcribe') do |stdin, out, err, external|
       # Create a thread to read from each stream
       { :stdout => out, :stderr => err }.each do |key, stream|
-        puts "redirecting #{key.to_s}"
+        logger.info "redirecting #{key.to_s}"
         Thread.new do
           until (line = stream.gets).nil? do
             puts "#{key} --> #{line}"
@@ -80,7 +80,7 @@ class SpoutWorker
       # Don't exit until the external process is done
       external.join
       if external.value.success?
-        puts 'successfully compiled transcriber'
+        logger.info 'successfully compiled transcriber'
       else
         raise 'compile failed.'
       end
@@ -103,10 +103,10 @@ class SpoutWorker
     Open3.popen3(command) do |stdin, out, err, external|
       # Create a thread to read from each stream
       { :stdout => out, :stderr => err }.each do |key, stream|
-        puts "redirecting #{key.to_s}"
+        logger.info "redirecting #{key.to_s}"
         Thread.new do
           until (line = stream.gets).nil? do
-            puts "#{key} --> #{line}"
+            logger.info "#{key} --> #{line}"
           end
         end
       end
@@ -114,7 +114,7 @@ class SpoutWorker
       # Don't exit until the external process is done
       external.join
       if external.value.success?
-        puts 'successfully split files'
+        logger.info 'successfully split files'
       else
         raise 'splitting files caused an error.'
       end
@@ -135,7 +135,7 @@ class SpoutWorker
       Open3.popen3(command) do |stdin, out, err, external|
         # Create a thread to read from each stream
         { :stdout => out, :stderr => err }.each do |key, stream|
-          puts "redirecting #{key.to_s}"
+          logger.info "redirecting #{key.to_s}"
           Thread.new do
             until (line = stream.gets).nil? do
               puts "#{key} --> #{line}"
@@ -149,10 +149,10 @@ class SpoutWorker
         # Don't exit until the external process is done
         external.join
         if external.value.success?
-          puts 'successfully transcribed file'
+          logger.info 'successfully transcribed file'
         else
           #errors here are not catastrophic
-          puts 'an error occured while transcribing file'
+          logger.info 'an error occured while transcribing file'
         end
       end
     end
@@ -200,7 +200,7 @@ class SpoutWorker
     client.create_ref('tomecast/tomecast-podcasts', 'heads/'+branchname, master_resource[:object][:sha])
 
     client.create_contents('tomecast/tomecast-podcasts',
-                            "#{podcast_title}/#{transcript['date']} #{transcript['title']}.json",
+                            "#{podcast_title}/#{cleaned_string(transcript['date'] +' '+ transcript['title'])}.json",
                             'Added new episode',
                             JSON.pretty_generate(transcript),
                            :branch => branchname)
