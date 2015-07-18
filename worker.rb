@@ -200,7 +200,7 @@ class SpoutWorker
     client.create_ref('tomecast/tomecast-podcasts', 'heads/'+branchname, master_resource[:object][:sha])
 
     client.create_contents('tomecast/tomecast-podcasts',
-                            "#{podcast_title}/#{cleaned_string(transcript['date'] +' '+ transcript['title'])}.json",
+                            "#{podcast_title}/#{cleaned_string(transcript['date'] +' '+ transcript['title'], ' ')}.json",
                             'Added new episode',
                             JSON.pretty_generate(transcript),
                            :branch => branchname)
