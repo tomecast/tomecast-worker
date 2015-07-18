@@ -8,6 +8,12 @@ require 'octokit'
 unless ENV['REDIS_SERVER_URL']
   raise 'Redis Server Url is missing'
 end
+unless ENV['SPEECH_API_KEY']
+  raise 'Speech API Key is missing'
+end
+unless ENV['GITHUB_API_KEY']
+  raise 'Github API Key is missing'
+end
 
 Sidekiq.configure_server do |config|
   config.redis = { :url => ENV['REDIS_SERVER_URL'] }
@@ -21,13 +27,7 @@ class SpoutWorker
   include Sidekiq::Worker
 
   def perform(podcast_title, episode_title, episode_url, pubdate, description='')
-    unless ENV['SPEECH_API_KEY']
-      raise 'Speech API Key is missing'
-    end
 
-    unless ENV['GITHUB_API_KEY']
-      raise 'Github API Key is missing'
-    end
 
     #prepare environment
     cleanup_temp_folders

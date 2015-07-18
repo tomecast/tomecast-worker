@@ -31,4 +31,4 @@ run bundle install --path vendor/bundle
 
 
 #finish up
-cmd ["bundle", "exec", "sidekiq", "-r", "./worker.rb"]
+cmd ["bundle", "exec", "sidekiq", "-r", "./worker.rb", "-c","1"]
