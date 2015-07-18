@@ -28,7 +28,7 @@ class SpoutWorker
 
   def perform(podcast_title, episode_title, episode_url, pubdate, description='')
 
-
+    #TODO: change this code so that it actually processes each job subfolder set (ie there could be multiple sidekiq workers running.)
     #prepare environment
     cleanup_temp_folders
     compile_speech_transcriber
