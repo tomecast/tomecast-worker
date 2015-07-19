@@ -66,10 +66,10 @@ namespace SpeechSample
             this.token = HttpPost(AccessUri, this.request);
 
             // renew the token every specfied minutes
-            accessTokenRenewer = new Timer(new TimerCallback(OnTokenExpiredCallback),
-                                           this,
-                                           TimeSpan.FromMinutes(RefreshTokenDuration),
-                                           TimeSpan.FromMilliseconds(-1));
+//            accessTokenRenewer = new Timer(new TimerCallback(OnTokenExpiredCallback),
+//                                           this,
+//                                           TimeSpan.FromMinutes(RefreshTokenDuration),
+//                                           TimeSpan.FromMilliseconds(-1));
         }
 
         public AccessTokenInfo GetAccessToken()
