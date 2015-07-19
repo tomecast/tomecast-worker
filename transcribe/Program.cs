@@ -211,7 +211,7 @@ namespace SpeechSample
                     Console.Error.WriteLine("Uploading file to be processed" );
                     using (Stream requestStream = request.GetRequestStream())
                     {
-                        fileStream.CopyTo(requestStream);
+                        fs.CopyTo(requestStream);
                         // Flush
                         requestStream.Flush();
                     }
