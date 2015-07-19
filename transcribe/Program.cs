@@ -200,7 +200,7 @@ namespace SpeechSample
                 request.Host = host;
                 request.ContentType = contentType;
                 request.Headers["Authorization"] = headerValue;
-                request.AllowWriteStreamBuffering = false;
+                //request.AllowWriteStreamBuffering = false;
 
                 using (fs = new FileStream(audioFile, FileMode.Open, FileAccess.Read))
                 {
@@ -209,19 +209,9 @@ namespace SpeechSample
                      * Open a request stream and write 1024 byte chunks in the stream one at a time.
                      */
                     Console.Error.WriteLine("Uploading file to be processed" );
-                    byte[] buffer = null;
-                    int bytesRead = 0;
                     using (Stream requestStream = request.GetRequestStream())
                     {
-                        /*
-                         * Read 1024 raw bytes from the input audio file.
-                         */
-                        buffer = new Byte[checked((uint)Math.Min(1024, (int)fs.Length))];
-                        while ((bytesRead = fs.Read(buffer, 0, buffer.Length)) != 0)
-                        {
-                            requestStream.Write(buffer, 0, bytesRead);
-                        }
-
+                        fileStream.CopyTo(requestStream);
                         // Flush
                         requestStream.Flush();
                     }
