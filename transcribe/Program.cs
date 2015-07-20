@@ -212,7 +212,7 @@ namespace SpeechSample
                     /*
                      * Open a request stream and write 1024 byte chunks in the stream one at a time.
                      */
-                    Console.Error.WriteLine("Uploading file to be processed" );
+                    Console.Error.WriteLine("Uploading file to be processed: "+ audioFile );
                     using (Stream requestStream = request.GetRequestStream())
                     {
                         fs.CopyTo(requestStream);
