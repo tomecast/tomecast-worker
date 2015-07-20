@@ -149,7 +149,11 @@ namespace SpeechSample
 
                 return;
             }
+            if(!File.Exists(args[1])){
+                Console.Error.WriteLine("Specified file doesn't exist: "+ args[1]);
+                return;
 
+            }
             AccessTokenInfo token;
             string headerValue;
 
