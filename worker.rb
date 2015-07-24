@@ -189,24 +189,14 @@ class SpoutWorker
   def store_transcript_in_github(podcast_title,transcript)
     #write the file in github to a new branch.
     client = Octokit::Client.new(:access_token => ENV['GITHUB_API_KEY'])
-    #get the master branch sha.
-    master_resource = client.ref('tomecast/tomecast-podcasts', 'heads/master')
 
-    #create a new branchname, ensure its safe.
-    branchname = podcast_title + ' - ' + transcript['title']
-    # Strip out the non-ascii characters and path delimiteres
-    branchname = cleaned_string(branchname)
-
-    client.create_ref('tomecast/tomecast-podcasts', 'heads/'+branchname, master_resource[:object][:sha])
-
+    #write directly to the master branch.
     client.create_contents('tomecast/tomecast-podcasts',
                             "#{podcast_title}/#{cleaned_string(transcript['date'] +' '+ transcript['title'], ' ')}.json",
-                            'Added new episode',
+                            "Added new #{podcast_title} episode",
                             JSON.pretty_generate(transcript),
-                           :branch => branchname)
+                           :branch => 'master')
 
-    client.create_pull_request('tomecast/tomecast-podcasts', 'master', branchname,
-                               "Added new #{podcast_title} episode")
 
   end
 
