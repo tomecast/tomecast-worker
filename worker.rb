@@ -39,13 +39,14 @@ class SpoutWorker
     download_podcast(episode_url, episode_filename)
 
     #process podcast
-    transcript = Processor.new("podcast/#{episode_filename}", {
+    processor = Processor.new("podcast/#{episode_filename}", {
       :episode_title => episode_title,
       :podcast_title => podcast_title,
       :episode_url => episode_url,
       :pubdate => pubdate,
       :description => description
     })
+    transcript = processor.start()
 
     store_transcript_in_github(podcast_title,transcript)
 
