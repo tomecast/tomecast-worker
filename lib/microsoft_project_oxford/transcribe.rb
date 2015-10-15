@@ -93,10 +93,11 @@ class Transcribe
     #access token key expired.
     #thsi shouldt happen because of the timeout logic in the Authetnication script
 
-  rescue RestClient::InternalServerError => e
+  rescue RestClient::InternalServerError, RestClient::Forbidden => e
     if (attempts_left -= 1) > 0
       sleep 2 #sleep two seconds
-      p "Retrying "
+      puts "Retrying because of Error #{e.http_code}"
+      puts e.response
       retry
     else
       p "Oh Noes!"

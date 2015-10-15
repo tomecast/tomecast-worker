@@ -35,6 +35,6 @@ class Authentication
     res = RestClient.post 'https://oxford-speech.cloudapp.net/token/issueToken', auth_data
     payload = JSON.parse(res.body)
     @access_token = payload['access_token']
-    @expires = Time.now + payload['expires_in'].to_i
+    @expires = Time.now + (payload['expires_in'].to_i - 60) #Set the token expiry time to 1 minute before it actually exipres.
   end
 end
