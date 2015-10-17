@@ -24,9 +24,9 @@ run \
     apt-get -y install libsox-fmt-mp3 sox
 
 # copy the application files to the image
-#workdir /srv/tomecast
-#copy . /srv/tomecast
-#run bundle install --path vendor/bundle
+workdir /srv/tomecast-worker
+copy . /srv/tomecast-worker
+run bundle install --path vendor/bundle
 
 
 
