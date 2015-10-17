@@ -4,6 +4,7 @@ require 'fileutils'
 require 'sidekiq'
 require 'uri'
 require 'octokit'
+require_relative 'processor'
 
 unless ENV['REDIS_SERVER_URL']
   raise 'Redis Server Url is missing'
@@ -31,7 +32,6 @@ class SpoutWorker
     #TODO: change this code so that it actually processes each job subfolder set (ie there could be multiple sidekiq workers running.)
     #prepare environment
     cleanup_temp_folders
-    compile_speech_transcriber
 
     #download podcast
     uri = URI.parse(episode_url)
@@ -39,18 +39,15 @@ class SpoutWorker
     download_podcast(episode_url, episode_filename)
 
     #process podcast
-    responses = process_podcast(episode_filename)
+    processor = Processor.new("podcast/#{episode_filename}", {
+      :episode_title => episode_title,
+      :podcast_title => podcast_title,
+      :episode_url => episode_url,
+      :pubdate => pubdate,
+      :description => description
+    })
+    transcript = processor.start()
 
-    #generate segments
-    segments = generate_segments(responses)
-    transcript = {
-        'title' => episode_title,
-        'date' => DateTime.rfc3339(pubdate).strftime('%F'),
-        'description' => description,
-        'episode_url' => episode_url,
-        'segments' => segments,
-        'slug' => cleaned_string(episode_title,'-')
-    }
     store_transcript_in_github(podcast_title,transcript)
 
   end
@@ -62,31 +59,6 @@ class SpoutWorker
     FileUtils.rm_rf Dir.glob("podcast/*")
   end
 
-  def compile_speech_transcriber()
-    ### Compile SpeechSDK Transcriber
-    command = "mcs /reference:System.ServiceModel.dll /reference:System.Runtime.Serialization /reference:System.Web -r:SpeechSDK/x64/SpeechClient.dll Program.cs"
-
-    Open3.popen3(command,:chdir=>'transcribe') do |stdin, out, err, external|
-      # Create a thread to read from each stream
-      { :stdout => out, :stderr => err }.each do |key, stream|
-        logger.info "redirecting #{key.to_s}"
-        Thread.new do
-          until (line = stream.gets).nil? do
-            puts "#{key} --> #{line}"
-          end
-        end
-      end
-
-      # Don't exit until the external process is done
-      external.join
-      if external.value.success?
-        logger.info 'successfully compiled transcriber'
-      else
-        raise 'compile failed.'
-      end
-    end
-  end
-
   def download_podcast(episode_url, episode_filename)
     File.open("podcast/#{episode_filename}", "wb") do |saved_file|
       # the following "open" is provided by open-uri
@@ -94,96 +66,6 @@ class SpoutWorker
         saved_file.write(read_file.read)
       end
     end
-  end
-
-  def process_podcast(episode_filename)
-    # spliting the podcast into 10s clips with single channel audio and 16000 sample rate
-    command = "sox podcast/#{episode_filename} -c 1 -r 16000 segments/segment.wav trim 0 10 : newfile : restart "
-
-    Open3.popen3(command) do |stdin, out, err, external|
-      # Create a thread to read from each stream
-      { :stdout => out, :stderr => err }.each do |key, stream|
-        logger.info "redirecting #{key.to_s}"
-        Thread.new do
-          until (line = stream.gets).nil? do
-            logger.info "#{key} --> #{line}"
-          end
-        end
-      end
-
-      # Don't exit until the external process is done
-      external.join
-      if external.value.success?
-        logger.info 'successfully split files'
-      else
-        raise 'splitting files caused an error.'
-      end
-
-    end
-
-    responses = []
-
-    #loop through the segments, and use the speech api to transcribe them.
-    Dir['segments/*'].sort().each do |file_name|
-      next if File.directory? file_name
-
-      #get the index from the filename.
-      index = File.basename(file_name,File.extname(file_name))[7..-1].to_i
-      index = index -1
-
-      command = "mono transcribe/Program.exe 'https://speech.platform.bing.com/recognize' '#{file_name}' '#{ENV['SPEECH_API_KEY']}'"
-      Open3.popen3(command) do |stdin, out, err, external|
-        # Create a thread to read from each stream
-        { :stdout => out, :stderr => err }.each do |key, stream|
-          logger.info "redirecting #{key.to_s}"
-          Thread.new do
-            until (line = stream.gets).nil? do
-              puts "#{key} --> #{line}"
-
-              if(key == :stdout)
-                responses.insert(index, line)
-              end
-            end
-          end
-        end
-        # Don't exit until the external process is done
-        external.join
-        if external.value.success?
-          logger.info 'successfully transcribed file'
-        else
-          #errors here are not catastrophic
-          logger.info 'an error occured while transcribing file'
-        end
-      end
-    end
-    return responses
-  end
-
-  def generate_segments(responses)
-    ## merge the response segments into a coherent transcript
-    segments = {}
-    require 'json'
-    responses.each_with_index do |response, index|
-      next unless response
-      segment = JSON.parse(response)
-      next unless segment
-      if segment['header']['status'] == 'error'
-        segments[index*10] = {
-            'requestid' => segment['header']['properties']['requestid'],
-            'timestamp' => index*10,
-            'content' => ''
-        }
-      else
-        segments[index*10] = {
-            'requestid' => segment['header']['properties']['requestid'],
-            'confidence' => segment['results'][0]['confidence'],
-            'timestamp' => index*10,
-            'content' => segment['results'][0]['name']
-        }
-      end
-
-    end
-    return segments
   end
 
   def store_transcript_in_github(podcast_title,transcript)

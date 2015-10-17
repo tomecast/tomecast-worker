@@ -1,4 +1,4 @@
-from mono:3.10
+from java
 
 # install ruby 2.1.5
 # instructions from https://stackoverflow.com/questions/18490591/how-to-install-ruby-2-on-ubuntu-without-rvm?answertab=active#tab-top
@@ -25,10 +25,11 @@ run \
 
 # copy the application files to the image
 workdir /srv/tomecast-worker
-copy . /srv/tomecast-worker/
+copy . /srv/tomecast-worker
 run bundle install --path vendor/bundle
 
 
 
 #finish up
 cmd ["bundle", "exec", "sidekiq", "-r", "./worker.rb", "-c","1"]
+#"bundle", "exec", "ruby", "processor.rb"
