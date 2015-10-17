@@ -2,7 +2,6 @@ require 'open-uri'
 require 'open3'
 require 'fileutils'
 require 'uri'
-require 'octokit'
 require 'logger'
 
 require_relative 'lib/microsoft_project_oxford/transcribe'
@@ -194,9 +193,17 @@ class Processor
 
   def coalesce_transcription
 
+
+    begin
+      metadata_pubdate = DateTime.rfc3339(@metadata[:pubdate]).strftime('%F')
+    rescue ArgumentError
+      # handle invalid date
+      metadata_pubdate = DateTime.now().strftime('%F')
+    end
+
     transcript_payload = {
         'title' => @metadata[:episode_title],
-        'date' => DateTime.rfc3339(@metadata[:pubdate]).strftime('%F'),
+        'date' => metadata_pubdate,
         'description' => @metadata[:description],
         'episode_url' => @metadata[:episode_url],
         'slug' => cleaned_string(@metadata[:episode_title],'-')
@@ -204,34 +211,38 @@ class Processor
 
     transcript = {}
     @segments.each do |segment_info|
-      transcript_segment_file = "transcript/segment-#{segment_info[:start_segment]}-#{segment_info[:length_segment]}.json"
-      file_content_json = File.open(transcript_segment_file, 'r')
+      begin
+        transcript_segment_file = "transcript/segment-#{segment_info[:start_segment]}-#{segment_info[:length_segment]}.json"
+        file_content_json = File.read(transcript_segment_file)
+        transcript_info = JSON.parse(file_content_json)
 
-      transcript_info = JSON.parse(file_content_json)
-
-
-
-      if transcript_info['header']['status'] == 'error'
+        if transcript_info['header']['status'] == 'error'
+          transcript[segment_info[:start_segment].to_s] = {
+              'requestid' => transcript_info['header']['properties']['requestid'],
+              'timestamp' => segment_info[:start_segment],
+              'content' => ''
+          }
+        else
+          transcript[segment_info[:start_segment].to_s] = {
+              'requestid' => transcript_info['header']['properties']['requestid'],
+              'confidence' => transcript_info['results'][0]['confidence'],
+              'timestamp' => segment_info[:start_segment],
+              'content' => transcript_info['results'][0]['name'],
+              'speaker' => segment_info[:speaker]
+          }
+        end
+      rescue
+        #an error occured parsing the transcript, or the transcript doesnt exist.
+        # create a nil tombstone.
         transcript[segment_info[:start_segment].to_s] = {
-            'requestid' => transcript_info['header']['properties']['requestid'],
             'timestamp' => segment_info[:start_segment],
-            'content' => ''
-        }
-      else
-        transcript[segment_info[:start_segment].to_s] = {
-            'requestid' => transcript_info['header']['properties']['requestid'],
-            'confidence' => transcript_info['results'][0]['confidence'],
-            'timestamp' => segment_info[:start_segment],
-            'content' => transcript_info['results'][0]['name'],
-            'speaker' => segment_info[:speaker]
+            'content' => '',
         }
       end
-
-      transcript_payload['segments'] = transcript
-
-      return transcript_payload
     end
 
+    transcript_payload['segments'] = transcript
+    return transcript_payload
 
   end
 
