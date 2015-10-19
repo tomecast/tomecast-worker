@@ -5,6 +5,7 @@ require 'sidekiq'
 require 'uri'
 require 'octokit'
 require_relative 'processor'
+require_relative 'lib/helpers/tomecast_logger'
 
 unless ENV['REDIS_SERVER_URL']
   raise 'Redis Server Url is missing'
@@ -26,19 +27,20 @@ end
 
 class SpoutWorker
   include Sidekiq::Worker
+  include TomecastLogger
 
   def perform(podcast_title, episode_title, episode_url, pubdate, description='')
 
     #TODO: change this code so that it actually processes each job subfolder set (ie there could be multiple sidekiq workers running.)
-    #prepare environment
+    logger.info 'prepare environment'
     cleanup_temp_folders
 
-    #download podcast
+    logger.info 'download podcast'
     uri = URI.parse(episode_url)
     episode_filename = File.basename(uri.path)
     download_podcast(episode_url, episode_filename)
 
-    #process podcast
+    logger.info 'begin process podcast'
     processor = Processor.new("podcast/#{episode_filename}", {
       :episode_title => episode_title,
       :podcast_title => podcast_title,
@@ -48,12 +50,17 @@ class SpoutWorker
     })
     transcript = processor.start()
 
+    logger.info 'store transcript in github'
     store_transcript_in_github(podcast_title,transcript)
 
+  rescue => e
+    logger.error "podcast worker failed for #{podcast_title} - #{episode_title}"
+    logger.error e.message + "\n " + e.backtrace.join("\n ")
+    raise
   end
 
   def cleanup_temp_folders()
-    #clear up temp folders
+    logger.debug 'clear up temp folders'
     FileUtils.rm_rf Dir.glob("transcript/*")
     FileUtils.rm_rf Dir.glob("segments/*")
     FileUtils.rm_rf Dir.glob("podcast/*")

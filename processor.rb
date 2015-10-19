@@ -3,37 +3,36 @@ require 'open3'
 require 'fileutils'
 require 'uri'
 require 'logger'
-
+require_relative 'lib/helpers/tomecast_logger'
 require_relative 'lib/microsoft_project_oxford/transcribe'
 
 class Processor
-
+  include TomecastLogger
 
   def initialize(episode_local_path, metadata)
     @episode_local_path = episode_local_path
     @metadata = metadata
-    @logger = Logger.new(STDOUT)
     @segments = []
   end
 
 
   def start()
-    @logger.info '## convert the podcast to a mono wav file (so that we can do speaker diarization on it'
+    logger.info '## convert the podcast to a mono wav file (so that we can do speaker diarization on it'
     convert_to_wav
 
-    @logger.info '## run speaker diarization on the wav file to calculate the speech segments'
+    logger.info '## run speaker diarization on the wav file to calculate the speech segments'
     calculate_segments
 
-    @logger.info '## parse speech segments from the podcast.seg file'
+    logger.info '## parse speech segments from the podcast.seg file'
     parse_segments
 
-    @logger.info '## split audio file into segments and store in the segments folder'
+    logger.info '## split audio file into segments and store in the segments folder'
     split_audio_into_segments
 
-    @logger.info '## transcribe segments using microsoft project oxford api'
+    logger.info '## transcribe segments using microsoft project oxford api'
     transcribe_segments
 
-    @logger.info '## coalesce transcription by merging all the segments into a json blob'
+    logger.info '## coalesce transcription by merging all the segments into a json blob'
     coalesce_transcription
 
   end
@@ -44,10 +43,10 @@ class Processor
       Open3.popen3(command) do |stdin, out, err, external|
         # Create a thread to read from each stream
         { :stdout => out, :stderr => err }.each do |key, stream|
-          @logger.info "redirecting #{key.to_s}"
+          logger.info "redirecting #{key.to_s}"
           Thread.new do
             until (line = stream.gets).nil? do
-              @logger.debug "#{key} --> #{line}"
+              logger.debug "#{key} --> #{line}"
             end
           end
         end
@@ -55,7 +54,7 @@ class Processor
         # Don't exit until the external process is done
         external.join
         if external.value.success?
-          @logger.info 'successfully converted podcast to wav file'
+          logger.info 'successfully converted podcast to wav file'
         else
           raise 'converting to wav caused an error.'
         end
@@ -69,10 +68,10 @@ class Processor
     Open3.popen3(command) do |stdin, out, err, external|
       # Create a thread to read from each stream
       { :stdout => out, :stderr => err }.each do |key, stream|
-        @logger.info "redirecting #{key.to_s}"
+        logger.info "redirecting #{key.to_s}"
         Thread.new do
           until (line = stream.gets).nil? do
-            @logger.debug "#{key} --> #{line}"
+            logger.debug "#{key} --> #{line}"
           end
         end
       end
@@ -80,7 +79,7 @@ class Processor
       # Don't exit until the external process is done
       external.join
       if external.value.success?
-        @logger.info 'successfully calculated speaker segments using diarization'
+        logger.info 'successfully calculated speaker segments using diarization'
       else
         raise 'calculating segments caused an error.'
       end
@@ -135,23 +134,23 @@ class Processor
     if(!long_segments.empty?)
       long_segments = long_segments.sort_by { |k| k[:length_segment] }.reverse
 
-      @logger.warn "Found long segments:"
+      logger.warn "Found long segments:"
       long_segments.each {|segment|
-        @logger.warn("segment: #{segment[:start_segment]}, length: #{segment[:length_segment]}s")
+        logger.warn("segment: #{segment[:start_segment]}, length: #{segment[:length_segment]}s")
       }
     else
-      @logger.info "No long segments found"
+      logger.info "No long segments found"
     end
 
     if(!segment_gaps.empty?)
       segment_gaps = segment_gaps.sort_by { |k| k[:segment_gap] }.reverse
 
-      @logger.warn "Found significant gap between segments:"
+      logger.warn "Found significant gap between segments:"
       segment_gaps.each {|segment|
-        @logger.warn("current segment: #{segment[:current_segment_start]}, previous segment end: #{segment[:prev_segment_end]}, length: #{segment[:segment_gap]}")
+        logger.warn("current segment: #{segment[:current_segment_start]}, previous segment end: #{segment[:prev_segment_end]}, length: #{segment[:segment_gap]}")
       }
     else
-      @logger.info "No significant gaps found between segments"
+      logger.info "No significant gaps found between segments"
     end
 
   end
@@ -165,10 +164,10 @@ class Processor
       Open3.popen3(command) do |stdin, out, err, external|
         # Create a thread to read from each stream
         { :stdout => out, :stderr => err }.each do |key, stream|
-          @logger.info "redirecting #{key.to_s}"
+          logger.info "redirecting #{key.to_s}"
           Thread.new do
             until (line = stream.gets).nil? do
-              @logger.debug "#{key} --> #{line}"
+              logger.debug "#{key} --> #{line}"
             end
           end
         end
@@ -176,7 +175,7 @@ class Processor
         # Don't exit until the external process is done
         external.join
         if external.value.success?
-          @logger.info "successfully extracted audio segment(#{segment_info[:start_segment]}s - #{segment_info[:start_segment] + segment_info[:length_segment]}s) from podcast"
+          logger.info "successfully extracted audio segment(#{segment_info[:start_segment]}s - #{segment_info[:start_segment] + segment_info[:length_segment]}s) from podcast"
         else
           raise 'extracting segment caused an error.'
         end

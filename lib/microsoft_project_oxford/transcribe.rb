@@ -5,6 +5,7 @@ require 'json'
 require 'securerandom'
 require_relative 'authentication'
 require 'ratelimit'
+require_relative '../helpers/tomecast_logger'
 
 # unless ENV['REDIS_SERVER_URL']
 #   raise 'Redis Server Url is missing'
@@ -14,6 +15,7 @@ unless ENV['SPEECH_API_KEY']
 end
 
 class Transcribe
+  include TomecastLogger
 
   def initialize(segments_folder='segments/', transcriptions_folder='transcripts/')
     @endpoint = 'https://speech.platform.bing.com/recognize'
@@ -38,7 +40,7 @@ class Transcribe
       #p "current requests in the last 3s: #{transcribe_ratelimit.count(ENV['SPEECH_API_KEY'], 3)}"
 
       #transcribe_ratelimit.exec_within_threshold(ENV['SPEECH_API_KEY'], :threshold => 1, :interval => 3) do
-        puts "processing #{file_name}"
+        logger.debug "processing #{file_name}"
         transcribe_request(file_name, transcript_file)
         sleep 2
         #transcribe_ratelimit.add(ENV['SPEECH_API_KEY'])
@@ -96,14 +98,14 @@ class Transcribe
   rescue RestClient::InternalServerError, RestClient::Forbidden => e
     if (attempts_left -= 1) > 0
       sleep 2 #sleep two seconds
-      puts "Retrying because of Error #{e.http_code}"
-      puts e.response
+      logger.warn "Retrying because of Error #{e.http_code}"
+      logger.warn e.response
       retry
     else
-      p "Oh Noes!"
+      logger.fatal 'No more retries left, stopping.'
     end
   else
-    p "Success"
+    logger.debug 'Sucessfully transcribed audio segment'
   end
 
   def encode_url_params(url_params)

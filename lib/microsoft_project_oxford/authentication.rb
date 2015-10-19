@@ -2,7 +2,9 @@ require 'net/http'
 require 'uri'
 require 'rest-client'
 require 'json'
+require_relative '../helpers/tomecast_logger'
 class Authentication
+  include TomecastLogger
 
   @access_token = nil
   @expires = nil
@@ -19,6 +21,7 @@ class Authentication
     if !@access_token
       auth_request
     elsif Time.now > @expires
+      logger.debug 'access token has expired. refreshing'
       auth_request
     end
     @access_token
@@ -36,5 +39,6 @@ class Authentication
     payload = JSON.parse(res.body)
     @access_token = payload['access_token']
     @expires = Time.now + (payload['expires_in'].to_i - 60) #Set the token expiry time to 1 minute before it actually exipres.
+    logger.debug 'retrieved access token'
   end
 end
