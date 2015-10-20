@@ -28,6 +28,8 @@ class Authentication
   end
 
   def auth_request
+    attempts_left ||=2
+
     auth_data = {
         :grant_type=>'client_credentials',
         :client_id=> @client_id,
@@ -40,5 +42,21 @@ class Authentication
     @access_token = payload['access_token']
     @expires = Time.now + (payload['expires_in'].to_i - 60) #Set the token expiry time to 1 minute before it actually exipres.
     logger.debug 'retrieved access token'
+
+
+    # will throw an error when failure occurs.
+    # https://dev.projectoxford.ai/docs/services/54d85c1d5eefd00dc474a0ef/operations/54f0389249c3f70a50e79b85
+    #{ "statusCode": 403, "message": "Out of call volume quota. Quota will be replenished in 21.06:09:16." }
+  rescue RestClient::InternalServerError, RestClient::Forbidden => e
+    if (attempts_left -= 1) > 0
+      sleep 2 #sleep two seconds
+      logger.warn "Authentication failed, retrying because of Error #{e.http_code}"
+      logger.warn e.response
+      retry
+    else
+      logger.fatal 'No more retries left, stopping.'
+    end
+  else
+    logger.debug 'Sucessfully retrieved api token'
   end
 end

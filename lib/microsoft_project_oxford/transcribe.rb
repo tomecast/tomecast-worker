@@ -26,6 +26,8 @@ class Transcribe
 
   def start()
 
+    #Speech APIs limits to 20 transactions per minute and 5000 transactions per month.
+
     #transcribe_ratelimit = Ratelimit.new('transcribe',{:redis =>@redis})
 
     #loop through the segments, and use the speech api to transcribe them.
