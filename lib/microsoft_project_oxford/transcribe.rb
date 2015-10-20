@@ -97,14 +97,23 @@ class Transcribe
     #access token key expired.
     #thsi shouldt happen because of the timeout logic in the Authetnication script
 
-  rescue RestClient::InternalServerError, RestClient::Forbidden => e
+
+  rescue RestClient::TooManyRequests => e
+    if (attempts_left -= 1) > 0
+      sleep 5 #sleep 5 seconds (get over the rate limit.)
+      logger.warn "Retrying because we hit Rate-Limit #{e.http_code}\n #{e.response}"
+      retry
+    else
+      logger.error 'No more retries left, stopping.'
+    end
+  rescue RestClient::InternalServerError, RestClient::Forbidden, RestClient::RequestTimeout, RestClient::ServiceUnavailable => e
     if (attempts_left -= 1) > 0
       sleep 2 #sleep two seconds
       logger.warn "Retrying because of Error #{e.http_code}"
       logger.warn e.response
       retry
     else
-      logger.fatal 'No more retries left, stopping.'
+      logger.error 'No more retries left, stopping.'
     end
   else
     logger.debug 'Sucessfully transcribed audio segment'

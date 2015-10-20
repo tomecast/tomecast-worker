@@ -47,14 +47,17 @@ class Authentication
     # will throw an error when failure occurs.
     # https://dev.projectoxford.ai/docs/services/54d85c1d5eefd00dc474a0ef/operations/54f0389249c3f70a50e79b85
     #{ "statusCode": 403, "message": "Out of call volume quota. Quota will be replenished in 21.06:09:16." }
-  rescue RestClient::InternalServerError, RestClient::Forbidden => e
+  rescue RestClient::Forbidden => e
+    logger.error "This api key has no quota left. We cant use this key anylonger. TODO: support multiple keys. \n#{e.http_code}\n#{e.response}"
+
+  rescue RestClient::InternalServerError,  RestClient::RequestTimeout, RestClient::ServiceUnavailable => e
     if (attempts_left -= 1) > 0
       sleep 2 #sleep two seconds
       logger.warn "Authentication failed, retrying because of Error #{e.http_code}"
       logger.warn e.response
       retry
     else
-      logger.fatal 'No more retries left, stopping.'
+      logger.error 'No more retries left, stopping.'
     end
   else
     logger.debug 'Sucessfully retrieved api token'
