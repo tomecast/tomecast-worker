@@ -10,8 +10,8 @@ require_relative '../helpers/tomecast_logger'
 # unless ENV['REDIS_SERVER_URL']
 #   raise 'Redis Server Url is missing'
 # end
-unless ENV['SPEECH_API_KEY']
-  raise 'Speech API Key is missing'
+unless ENV['OXFORD_API_KEYS']
+  raise 'Speech API Keys are missing'
 end
 
 class Transcribe
@@ -19,7 +19,7 @@ class Transcribe
 
   def initialize(segments_folder='segments/', transcriptions_folder='transcripts/')
     @endpoint = 'https://speech.platform.bing.com/recognize'
-    @auth = Authentication.new('TomeCast',ENV['SPEECH_API_KEY'])
+    @auth = Authentication.new('TomeCast',ENV['OXFORD_API_KEYS'].split(';'))
     @segments_folder = segments_folder
     #@redis = Redis.new(:url => "#{ENV['REDIS_SERVER_URL']}/ratelimit")
   end
@@ -70,7 +70,7 @@ class Transcribe
     headers = {
         :accept => 'application/json;text/xml',
         :content_type =>'audio/wav; codec=""audio/pcm""; samplerate=16000',
-        :authorization => 'Bearer ' + @auth.get_access_token
+        :authorization => 'Bearer ' + @auth.get_access_token(segment_file.hash)
     }
 
     segment_audio_file = File.open(segment_file, 'r')
@@ -106,6 +106,10 @@ class Transcribe
     else
       logger.error 'No more retries left, stopping.'
     end
+  rescue RestClient::Forbidden => e
+    logger.warn 'the client_key has exceeded its limit, it has been removed from the rotation'
+    @auth.remove_key_for_hash(segment_file.hash)
+    retry
   rescue RestClient::InternalServerError, RestClient::Forbidden, RestClient::RequestTimeout, RestClient::ServiceUnavailable => e
     if (attempts_left -= 1) > 0
       sleep 2 #sleep two seconds

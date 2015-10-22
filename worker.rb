@@ -10,8 +10,8 @@ require_relative 'lib/helpers/tomecast_logger'
 unless ENV['REDIS_SERVER_URL']
   raise 'Redis Server Url is missing'
 end
-unless ENV['SPEECH_API_KEY']
-  raise 'Speech API Key is missing'
+unless ENV['OXFORD_API_KEYS']
+  raise 'Speech API Keys are missing'
 end
 unless ENV['GITHUB_API_KEY']
   raise 'Github API Key is missing'

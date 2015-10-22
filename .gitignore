@@ -1,3 +1,6 @@
+/lib/google_speech_api/keys_unique.yaml
+/lib/microsoft_project_oxford/keys.yaml
+/lib/google_speech_api/keys.yaml
 # Created by .gitignore support plugin (hsz.mobi)
 .idea
 transcribe/Program.exe
