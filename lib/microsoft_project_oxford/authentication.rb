@@ -17,7 +17,7 @@ class Authentication
         logger.info('init key:' + key)
         auth_request(key)
       rescue => e
-        logger.error('an error occured while init key.'+ e)
+        logger.error("an error occured while init key: #{e}")
         #do nothing, the key will automatically be removed.
       end
     end
