@@ -81,7 +81,7 @@ class SpoutWorker
 
     #write directly to the master branch.
     client.create_contents('tomecast/tomecast-podcasts',
-                            "#{podcast_title}/#{cleaned_string(transcript['date'] +' '+ transcript['title'], ' ')}.json",
+                            "#{podcast_title}/#{cleaned_string(transcript['date'] +' '+ transcript['title'], '-')}.json",
                             "Added new #{podcast_title} episode",
                             JSON.pretty_generate(transcript),
                            :branch => 'master')
@@ -92,6 +92,6 @@ class SpoutWorker
   #################################################################################################
   # Utilities
   def cleaned_string(raw, delim='_')
-    raw.gsub(/^.*(\\|\/)/, '').gsub(/[^0-9A-Za-z.\-]/, delim)
+    raw.gsub(/^.*(\\|\/)/, '').gsub(/[^0-9A-Za-z.\-]/, ' ').strip().gsub(/\s+/, delim)
   end
 end

@@ -251,7 +251,7 @@ class Processor
   #################################################################################################
   # Utilities
   def cleaned_string(raw, delim='_')
-    raw.gsub(/^.*(\\|\/)/, '').gsub(/[^0-9A-Za-z.\-]/, delim)
+    raw.gsub(/^.*(\\|\/)/, '').gsub(/[^0-9A-Za-z.\-]/, ' ').strip().gsub(/\s+/, delim)
   end
 
 end
