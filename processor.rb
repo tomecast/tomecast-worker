@@ -219,7 +219,10 @@ class Processor
           transcript[segment_info[:start_segment].to_s] = {
               'requestid' => transcript_info['header']['properties']['requestid'],
               'timestamp' => segment_info[:start_segment],
-              'content' => ''
+              'content' => '',
+              'speaker' => segment_info[:speaker],
+              'length' => segment_info[:end_segment] - segment_info[:start_segment]
+
           }
         else
           transcript[segment_info[:start_segment].to_s] = {
@@ -227,7 +230,8 @@ class Processor
               'confidence' => transcript_info['results'][0]['confidence'],
               'timestamp' => segment_info[:start_segment],
               'content' => transcript_info['results'][0]['name'],
-              'speaker' => segment_info[:speaker]
+              'speaker' => segment_info[:speaker],
+              'length' => segment_info[:end_segment] - segment_info[:start_segment]
           }
         end
       rescue
