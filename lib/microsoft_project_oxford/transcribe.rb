@@ -97,6 +97,7 @@ class Transcribe
     #access token key expired.
     #thsi shouldt happen because of the timeout logic in the Authetnication script
 
+    #https://www.projectoxford.ai/doc/speech/REST/Recognition
 
   rescue RestClient::TooManyRequests => e
     if (attempts_left -= 1) > 0
@@ -106,7 +107,7 @@ class Transcribe
     else
       logger.error 'No more retries left, stopping.'
     end
-  rescue RestClient::Forbidden => e
+  rescue RestClient::Forbidden, RestClient::Unauthorized => e
     logger.warn 'the client_key has exceeded its limit, it has been removed from the rotation'
     @auth.remove_key_for_hash(segment_file.hash)
     retry
