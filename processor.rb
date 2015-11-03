@@ -5,7 +5,7 @@ require 'uri'
 require 'logger'
 require_relative 'lib/helpers/tomecast_logger'
 require_relative 'lib/microsoft_project_oxford/transcribe'
-
+require 'securerandom'
 class Processor
   include TomecastLogger
 
@@ -221,7 +221,8 @@ class Processor
               'timestamp' => segment_info[:start_segment],
               'content' => '',
               'speaker' => segment_info[:speaker],
-              'length' => segment_info[:end_segment] - segment_info[:start_segment]
+              'length' => segment_info[:end_segment] - segment_info[:start_segment],
+              'uuid' => SecureRandom.uuid
 
           }
         else
@@ -231,7 +232,9 @@ class Processor
               'timestamp' => segment_info[:start_segment],
               'content' => transcript_info['results'][0]['name'],
               'speaker' => segment_info[:speaker],
-              'length' => segment_info[:end_segment] - segment_info[:start_segment]
+              'length' => segment_info[:end_segment] - segment_info[:start_segment],
+              'uuid' => SecureRandom.uuid
+
           }
         end
       rescue
@@ -240,6 +243,7 @@ class Processor
         transcript[segment_info[:start_segment].to_s] = {
             'timestamp' => segment_info[:start_segment],
             'content' => '',
+            'uuid' => SecureRandom.uuid
         }
       end
     end
