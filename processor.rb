@@ -208,7 +208,7 @@ class Processor
         'slug' => cleaned_string(@metadata[:episode_title],'-')
     }
 
-    transcript = {}
+    transcript = []
     @segments.each do |segment_info|
       begin
         transcript_segment_file = "transcript/segment-#{segment_info[:start_segment]}-#{segment_info[:length_segment]}.json"
@@ -216,7 +216,7 @@ class Processor
         transcript_info = JSON.parse(file_content_json)
 
         if transcript_info['header']['status'] == 'error'
-          transcript[segment_info[:start_segment].to_s] = {
+          transcript.push({
               'requestid' => transcript_info['header']['properties']['requestid'],
               'timestamp' => segment_info[:start_segment],
               'content' => '',
@@ -224,9 +224,9 @@ class Processor
               'length' => segment_info[:end_segment] - segment_info[:start_segment],
               'uuid' => SecureRandom.uuid
 
-          }
+          })
         else
-          transcript[segment_info[:start_segment].to_s] = {
+          transcript.push({
               'requestid' => transcript_info['header']['properties']['requestid'],
               'confidence' => transcript_info['results'][0]['confidence'],
               'timestamp' => segment_info[:start_segment],
@@ -235,20 +235,20 @@ class Processor
               'length' => segment_info[:end_segment] - segment_info[:start_segment],
               'uuid' => SecureRandom.uuid
 
-          }
+          })
         end
       rescue
         #an error occured parsing the transcript, or the transcript doesnt exist.
         # create a nil tombstone.
-        transcript[segment_info[:start_segment].to_s] = {
+        transcript.push({
             'timestamp' => segment_info[:start_segment],
             'content' => '',
             'uuid' => SecureRandom.uuid
-        }
+        })
       end
     end
 
-    transcript_payload['segments'] = transcript
+    transcript_payload['segments'] = transcript.sort! { |a,b| a['timestamp'] <=> b['timestamp'] }
     return transcript_payload
 
   end
